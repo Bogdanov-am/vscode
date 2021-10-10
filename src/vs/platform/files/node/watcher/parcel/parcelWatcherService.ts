@@ -22,7 +22,7 @@ import { FileChangeType } from 'vs/platform/files/common/files';
 import { IWatcherService } from 'vs/platform/files/node/watcher/parcel/watcher';
 import { IDiskFileChange, ILogMessage, normalizeFileChanges, IWatchRequest } from 'vs/platform/files/node/watcher/watcher';
 
-interface IWatcher extends IDisposable {
+export interface IWatcher extends IDisposable {
 
 	/**
 	 * The Parcel watcher instance is resolved when the watching has started.
@@ -444,7 +444,7 @@ export class ParcelWatcherService extends Disposable implements IWatcherService 
 		this.watchers.clear();
 	}
 
-	private restartWatching(watcher: IWatcher, delay = 800): void {
+	protected restartWatching(watcher: IWatcher, delay = 800): void {
 
 		// Restart watcher delayed to accomodate for
 		// changes on disk that have triggered the
@@ -455,8 +455,12 @@ export class ParcelWatcherService extends Disposable implements IWatcherService 
 			}
 
 			// Stop/start watcher counting the restarts
+			// Looks like startup needs to happen on next
+			// loop, otherwise it will not work.
 			this.stopWatching(watcher.request.path);
-			this.startWatching(watcher.request, watcher.restarts + 1);
+			setTimeout(() => {
+				this.startWatching(watcher.request, watcher.restarts + 1);
+			});
 		}, delay);
 
 		scheduler.schedule();

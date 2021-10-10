@@ -12,7 +12,7 @@ import { isLinux, isWindows } from 'vs/base/common/platform';
 import { Promises, RimRafMode } from 'vs/base/node/pfs';
 import { flakySuite, getPathFromAmdModule, getRandomTestPath } from 'vs/base/test/node/testUtils';
 import { FileChangeType } from 'vs/platform/files/common/files';
-import { ParcelWatcherService } from 'vs/platform/files/node/watcher/parcel/parcelWatcherService';
+import { IWatcher, ParcelWatcherService } from 'vs/platform/files/node/watcher/parcel/parcelWatcherService';
 import { IWatchRequest } from 'vs/platform/files/node/watcher/watcher';
 
 flakySuite('Recursive Watcher (parcel)', () => {
@@ -42,6 +42,10 @@ flakySuite('Recursive Watcher (parcel)', () => {
 
 		override toExcludePaths(path: string, excludes: string[] | undefined): string[] | undefined {
 			return super.toExcludePaths(path, excludes);
+		}
+
+		override  restartWatching(watcher: IWatcher, delay = 10): void {
+			return super.restartWatching(watcher, delay);
 		}
 	}
 
@@ -409,6 +413,7 @@ flakySuite('Recursive Watcher (parcel)', () => {
 		await Promises.mkdir(watchedPath);
 		await changeFuture;
 
+		await timeout(20); // restart is delayed
 		await service.whenReady();
 
 		// Verify events come in again
